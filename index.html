@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GoRide</title>
+<style>
+:root{--ink:#111;--muted:#6b6b6b;--line:#e8e8e8;--bg:#f6f6f6;--yellow:#ffd60a;--ok:#1a9d4b;--bad:#d93025;--hh:52px;color-scheme:light;box-sizing:border-box}
+html,body{height:100%}*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:#f1efe9;color:var(--ink);font:400 15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;overflow:hidden}
+button,input{font:inherit;color:inherit}button{cursor:pointer}
+:focus-visible{outline:2px solid #1a73e8;outline-offset:2px}
+header{position:fixed;inset:0 0 auto;z-index:6;height:calc(var(--hh) + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) 14px 0;display:flex;align-items:center;gap:14px;background:#fff;box-shadow:0 1px 8px rgba(0,0,0,.12)}
+.logo{font-weight:800;font-size:20px}.logo b{background:var(--yellow);padding:0 6px;border-radius:6px;margin-left:2px}
+nav{display:flex;gap:4px}nav button{border:0;background:none;padding:6px 12px;border-radius:99px;font-weight:600;color:var(--muted)}
+nav button[aria-pressed="true"]{background:var(--bg);color:var(--ink)}
+.pill{margin-left:auto;font-size:13px;font-weight:600;padding:6px 11px;border-radius:99px;background:var(--bg)}
+.mapw{position:fixed;inset:calc(var(--hh) + env(safe-area-inset-top,0px)) 0 0 0;background:#f1efe9}
+svg{display:block;width:100%;height:100%}
+.sheet{position:fixed;z-index:5;left:0;right:0;bottom:0;max-height:64vh;overflow:auto;background:#fff;border-radius:18px 18px 0 0;box-shadow:0 -4px 24px rgba(0,0,0,.18);padding:8px 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.grab{width:36px;height:4px;border-radius:9px;background:#d4d4d4;margin:0 auto 10px}
+@media(min-width:820px){.sheet{left:16px;right:auto;top:calc(var(--hh) + 16px + env(safe-area-inset-top,0px));bottom:16px;width:400px;max-height:none;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,.22)}.grab{display:none}.mapw{left:432px}}
+.v{animation:up .2s ease}@keyframes up{from{opacity:0;transform:translateY(8px)}}
+h2{margin:4px 0 12px;font-size:22px;font-weight:700}
+small,.sub{color:var(--muted);font-size:13px}.sub{margin:0 0 6px}
+.warn{margin:10px 0 0;padding:8px 10px;border-radius:8px;background:#fff6dd;font-size:13px}
+.rt2{position:relative;background:var(--bg);border-radius:12px}
+.rt2 button.r{display:flex;align-items:center;gap:14px;width:100%;border:0;background:none;padding:11px 56px 11px 14px;text-align:left}
+.rt2 button.r+button.r{border-top:1px solid #fff}
+.rt2 small{display:block}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--ink);flex:none}.dot.d{border-radius:2px}
+.swap{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:50%;border:0;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2);font-size:15px}
+.opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:10px 12px;margin-top:6px;border:2px solid transparent;border-radius:12px;background:none}
+.opt[aria-pressed="true"]{border-color:var(--ink);background:var(--bg)}
+.opt>span{font-size:32px;width:44px;text-align:center}.opt>div:not(.pr){flex:1}.opt b{display:block;font-size:16px}
+.pr{text-align:right}.pr s{display:block;color:var(--muted);font-size:12px}
+.row{display:flex;gap:8px;margin-top:12px}.row .ghost{margin:0;flex:1}
+.seg{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.seg button{padding:7px 14px;border:1px solid var(--line);border-radius:99px;background:#fff;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+input{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.sm{padding:0 16px;border:0;border-radius:10px;background:var(--bg);font-weight:600}
+.cta{width:100%;margin-top:14px;padding:15px;border:0;border-radius:12px;background:var(--ink);color:#fff;font-weight:700;font-size:16px}
+.cta:disabled{opacity:.35;cursor:not-allowed}
+.ghost{width:100%;margin-top:10px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff;font-weight:600}.ghost.cx{color:var(--bad)}
+.drv{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:8px 0}
+.av{width:46px;height:46px;border-radius:50%;background:var(--yellow);display:grid;place-items:center;font-weight:800;font-size:18px}
+.plate{border:1.5px solid var(--ink);border-radius:6px;padding:1px 8px;font-weight:700;font-size:13px;background:#ffe45c}
+.pin{background:var(--bg);border-radius:12px;padding:10px;text-align:center;margin-top:10px}
+.otpb{display:flex;gap:8px;justify-content:center;margin-top:6px}.otpb b{width:42px;height:48px;border-radius:8px;background:#fff;display:grid;place-items:center;font-size:24px;box-shadow:inset 0 0 0 1px var(--line)}
+.bar{height:4px;border-radius:9px;background:var(--line);overflow:hidden;margin:10px 0}.bar i{display:block;height:100%;width:0;background:var(--ink)}
+.ind{height:4px;background:var(--line);border-radius:4px;overflow:hidden;margin:16px 0}.ind i{display:block;width:40%;height:100%;background:var(--ink);animation:ind 1.2s infinite}@keyframes ind{from{margin-left:-40%}to{margin-left:100%}}
+.rowl{display:flex;justify-content:space-between;align-items:center;font-size:16px}.rowl b{font-size:22px}
+.rc{display:grid;grid-template-columns:1fr auto;gap:6px 12px;margin:12px 0}.rc .t{font-weight:700;border-top:1px solid var(--line);padding-top:8px;font-size:18px}.ok{color:var(--ok)}
+.stars{display:flex;gap:4px;justify-content:center;margin:6px 0}.stars button{border:0;background:none;font-size:32px;color:#d4d4d4}.stars button.on{color:#f5b301}
+.tick{width:56px;height:56px;border-radius:50%;background:var(--ok);color:#fff;display:grid;place-items:center;font-size:30px;margin:4px auto}
+.pl{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:13px 2px;border:0;border-bottom:1px solid var(--line);background:none}
+.h{padding:12px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px}
+.err{color:var(--bad);font-size:13px;min-height:18px;text-align:center}
+.pulse{transform-box:fill-box;transform-origin:center;animation:pu 1.6s infinite;fill:#111}@keyframes pu{from{transform:scale(.5);opacity:.3}to{transform:scale(3.4);opacity:0}}
+.amb{transition:transform 2.6s linear}
+#toast{position:fixed;left:50%;top:calc(var(--hh) + 14px);transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;display:none;z-index:40;max-width:90%;text-align:center}
+button.pill{border:0}.h .sm{flex:none}@media(max-width:600px){#lg{display:none}#wal{margin-left:auto!important}nav button{padding:6px 9px;font-size:14px}.logo{font-size:17px}header{gap:8px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}.amb{transition:none}}
+</style>
+</head>
+<body>
+<header><span class="logo">Go<b>Ride</b></span><nav><button data-t="book" aria-pressed="true">Ride</button><button data-t="hist" aria-pressed="false">Activity</button><button data-t="acct" id="acb" aria-pressed="false">Account</button></nav><select id="lg" aria-label="Language" style="width:auto;margin-left:auto;padding:5px 8px;font-size:13px"><option value="en">English</option><option value="te">తెలుగు</option><option value="hi">हिन्दी</option></select><button class="pill" id="wal" data-pg="wallet" data-go="1" style="margin-left:0" aria-label="Wallet"></button></header>
+<div class="mapw" id="mw"><svg id="map" viewBox="0 0 900 900" preserveAspectRatio="xMidYMin meet" role="img" aria-label="City map. Tap a place to set your drop."></svg></div>
+<section class="sheet" id="panel" aria-live="polite"></section>
+<div id="toast" role="status"></div>
+<script>
+// GoRide core: city map, routing, fares, ride flow (simulated drivers)
+const $=id=>document.getElementById(id);
+function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const rnd=rng(11),GX=10,GY=11,id=(i,j)=>j*GX+i,N=[],E=[];
+for(let j=0;j<GY;j++)for(let i=0;i<GX;i++)N.push({x:10+i*96+(rnd()-.5)*34,y:26+j*84+(rnd()-.5)*34});
+function add(a,b){const p=N[a],q=N[b],ja=a/GX|0,jb=b/GX|0,ia=a%GX,ib=b%GX;let k=0;if(ja===jb&&ja===3)k=2;else if((ja===jb&&(ja===1||ja===6))||(ia===ib&&(ia===2||ia===4)))k=1;
+E.push({a,b,k,c:{x:(p.x+q.x)/2+(rnd()-.5)*20,y:(p.y+q.y)/2+(rnd()-.5)*20},len:Math.hypot(p.x-q.x,p.y-q.y)*1.06,tr:rnd()<.16?1.7:1})}
+for(let j=0;j<GY;j++)for(let i=0;i<GX;i++){if(i<GX-1)add(id(i,j),id(i+1,j));if(j<GY-1)add(id(i,j),id(i,j+1));if(i<GX-1&&j<GY-1&&rnd()<.13)add(id(i,j),id(i+1,j+1))}
+function conn(){const adj=N.map(()=>[]);E.forEach(e=>{if(!e.dead){adj[e.a].push(e.b);adj[e.b].push(e.a)}});const seen=new Set([0]),q=[0];while(q.length)for(const n of adj[q.pop()])if(!seen.has(n)){seen.add(n);q.push(n)}return seen.size===N.length}
+E.forEach(e=>{if(!e.k&&rnd()<.16){e.dead=true;if(!conn())e.dead=false}});
+const ADJ=N.map(()=>[]);E.forEach(e=>{if(!e.dead){ADJ[e.a].push({to:e.b,e});ADJ[e.b].push({to:e.a,e})}});
+const cache={};
+function pathTo(s,t){const key=s+"-"+t;if(cache[key])return cache[key];const dist=N.map(()=>1e9),prev=N.map(()=>null),done=new Set;dist[s]=0;
+while(done.size<N.length){let u=-1;dist.forEach((d,n)=>{if(!done.has(n)&&(u<0||d<dist[u]))u=n});if(u<0||u===t)break;done.add(u);ADJ[u].forEach(({to,e})=>{const w=dist[u]+e.len*e.tr;if(w<dist[to]){dist[to]=w;prev[to]={u,e}}})}
+const seq=[];for(let n=t;prev[n];n=prev[n].u)seq.unshift({n,e:prev[n].e,u:prev[n].u});let d=`M${N[s].x} ${N[s].y}`,len=0;seq.forEach(x=>{d+=`Q${x.e.c.x} ${x.e.c.y} ${N[x.n].x} ${N[x.n].y}`;len+=x.e.len});return cache[key]={d,len}}
+const PL=[["Central Station",1,1],["City Mall",2,0],["Airport",6,7],["Tech Park",5,1],["University",2,3],["Govt Hospital",3,2],["Old Town Market",3,5],["Beach Road",6,2],["Bus Stand",0,5],["Lake View",5,4],["Stadium",1,6],["Metro Hub",4,5],["Railway Colony",8,1],["IT Park",9,3],["Temple Street",7,5],["Bus Depot",9,6],["Cricket Ground",7,8],["Harbour",8,9],["Orchard Mall",1,9],["Engineering College",4,10],["New Town",9,10],["Collectorate",0,10]].map((p,i)=>({i,n:p[0],nd:id(p[1],p[2]),x:N[id(p[1],p[2])].x,y:N[id(p[1],p[2])].y}));
+const T=[{k:"bike",n:"Bike",e:"🏍️",b:20,r:6,c:"1 seat",w:2,v:"Honda Shine"},{k:"auto",n:"Auto",e:"🛺",b:30,r:9,c:"3 seats",w:3,v:"Bajaj RE"},{k:"mini",n:"Mini",e:"🚗",b:40,r:11,c:"4 seats",w:4,v:"Maruti Swift"},{k:"sedan",n:"Sedan",e:"🚕",b:60,r:15,c:"4 seats · AC",w:5,v:"Toyota Etios"},{k:"pool",n:"Pool",e:"👥",b:25,r:7,c:"Shared ride",w:6,v:"Hyundai Aura"}];
+const NM=["Ramesh","Suresh","Anil","Kiran","Venkat","Srinivas","Ravi","Mahesh"],PAY=[["upi","UPI"],["card","Card"],["cash","Cash"],["wallet","Wallet"]];
+const KM=.0115,R=n=>"₹"+n.toLocaleString("en-IN"),tp=()=>T.find(t=>t.k===S.type),hm=m=>new Date(Date.now()+m*6e4).toLocaleTimeString("en-IN",{hour:"numeric",minute:"2-digit"});
+let S={tab:"book",pk:null,from:0,to:2,type:"mini",pay:"upi",st:"pick",run:0,promo:"",tip:0,sg:[1,1,1.2,1.3][Math.random()*4|0]},D=null,QQ=null,H=[],W=1000;
+try{H=JSON.parse(localStorage.getItem("goride-h")||"[]");W=+(localStorage.getItem("goride-w")||1000)}catch(e){}
+function keep(){try{localStorage.setItem("goride-h",JSON.stringify(H.slice(0,30)));localStorage.setItem("goride-w",W)}catch(e){}}
+function toast(m){const t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(toast.k);toast.k=setTimeout(()=>t.style.display="none",2600)}
+const rt=()=>pathTo(PL[S.from].nd,PL[S.to].nd);
+function quote(t){const r=rt(),d=r.len*KM,full=Math.round((t.b+t.r*d)*1.05*S.sg);let c=0;if(S.promo==="GORIDE20")c=Math.min(Math.round(full*.2),60);if(S.promo==="WELCOME50"&&full>=100)c=50;return{t,d,full,c,pay:Math.max(full-c,20)}}
+const QD=(i,j,u0,u1,v0,v1)=>{const p=[[i,j],[i+1,j],[i+1,j+1],[i,j+1]].map(([a,b])=>N[id(a,b)]),f=(u,v)=>[(1-u)*(1-v)*p[0].x+u*(1-v)*p[1].x+u*v*p[2].x+(1-u)*v*p[3].x,(1-u)*(1-v)*p[0].y+u*(1-v)*p[1].y+u*v*p[2].y+(1-u)*v*p[3].y];return [f(u0,v0),f(u1,v0),f(u1,v1),f(u0,v1)].map(a=>a.map(n=>n.toFixed(1)).join(",")).join(" ")};
+let AM=[];
+function drawMap(){const BC=["#ddd9cf","#e2ded5","#d7d3c9"],pd=e=>`M${N[e.a].x} ${N[e.a].y}Q${e.c.x} ${e.c.y} ${N[e.b].x} ${N[e.b].y}`,live=E.filter(e=>!e.dead);
+let h=`<defs><linearGradient id="g" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="600" y2="640"><stop offset="0" stop-color="#22e6c6"/><stop offset="1" stop-color="#7c5cff"/></linearGradient><filter id="gl" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="4"/></filter></defs><rect x="-200" y="-200" width="1400" height="1400" fill="#f1efe9"/>`;
+for(let j=0;j<GY-1;j++)for(let i=0;i<GX-1;i++){h+=`<polygon points="${QD(i,j,.06,.94,.06,.94)}" fill="${rnd()<.11?"#cfe6c8":"#e8e4dc"}"/>`;
+for(const a of[0,1])for(const b of[0,1])if(rnd()<.82)h+=`<polygon points="${QD(i,j,.13+a*.41,.13+a*.41+.33,.13+b*.41,.13+b*.41+.33)}" fill="${BC[rnd()*3|0]}"/>`}
+h+=`<path d="M-30 372C130 300 230 440 360 390S530 330 640 410S800 480 940 400" fill="none" stroke="#a9d3ec" stroke-width="40" stroke-linecap="round"/><path d="M-30 372C130 300 230 440 360 390S530 330 640 410S800 480 940 400" fill="none" stroke="#94c5e6" stroke-width="3" opacity=".7" stroke-linecap="round"/>`;
+const W2=[[10,12,15],[7,9,12],[5,7,9]];live.forEach(e=>h+=`<path d="${pd(e)}" fill="none" stroke="${["#d4d7dc","#c7cbd1","#e2a82c"][e.k]}" stroke-width="${[10,13,16][e.k]}" stroke-linecap="round"/>`);
+live.forEach(e=>h+=`<path d="${pd(e)}" fill="none" stroke="${e.tr>1?"#f0a097":["#fff","#fff","#ffd666"][e.k]}" stroke-width="${[6,9,11][e.k]}" stroke-linecap="round"/>`);
+h+=`<g id="rl" fill="none" stroke-linecap="round" stroke-linejoin="round"><path id="rc" stroke="#fff" stroke-width="11"/><path id="rt" stroke="#111" stroke-width="5"/><path id="rf" stroke="none"/></g><g id="amb"></g><g id="mk"></g><g id="car" style="display:none"><g id="cr"><path d="M0-25L9-12H-9Z" fill="#111"/></g><circle r="15" fill="#fff" stroke="#111" stroke-width="2.5"/><text id="ce" text-anchor="middle" dy="6" font-size="17">🚗</text></g>`;
+$("map").innerHTML=h;
+AM=Array.from({length:7},()=>({n:rnd()*N.length|0}));$("amb").innerHTML=AM.map((a,i)=>`<g class="amb" id="a${i}" style="transform:translate(${N[a.n].x}px,${N[a.n].y}px)"><rect x="-4" y="-6" width="8" height="12" rx="2.5" fill="#111" opacity=".7"/></g>`).join("")}
+setInterval(()=>AM.forEach((a,i)=>{const o=ADJ[a.n][rnd()*ADJ[a.n].length|0];a.n=o.to;const g=$("a"+i);if(g)g.style.transform=`translate(${N[a.n].x}px,${N[a.n].y}px)`}),2600);
+function marks(){$("mk").innerHTML=PL.map(p=>{const f=p.i===S.from,t=p.i===S.to,on=f||t;return `<g data-p="${p.i}" style="cursor:pointer">${f&&S.st==="find"?`<circle class="pulse" cx="${p.x}" cy="${p.y}" r="20"/>`:""}${t?`<rect x="${p.x-8}" y="${p.y-8}" width="16" height="16" fill="#111" stroke="#fff" stroke-width="3"/><rect x="${p.x-3}" y="${p.y-3}" width="6" height="6" fill="#fff"/>`:`<circle cx="${p.x}" cy="${p.y}" r="${f?9:4.5}" fill="${f?"#111":"#8a8a8a"}" stroke="#fff" stroke-width="${f?3:2}"/>${f?`<circle cx="${p.x}" cy="${p.y}" r="3" fill="#fff"/>`:""}`}<text x="${p.x}" y="${p.y-14}" text-anchor="middle" font-size="${on?12:10.5}" font-weight="${on?700:500}" fill="${on?"#111":"#666"}" stroke="#f1efe9" stroke-width="3.5" paint-order="stroke">${p.n}</text></g>`}).join("")}
+function setD(d){["rc","rt","rf"].forEach(i=>$(i).setAttribute("d",d));$("rf").setAttribute("class",d?"flow":"")}
+function preview(){setD(S.from===S.to?"":rt().d);$("car").style.display="none";marks()}
+function go(d,dur,tick,done){setD(d);const p0=$("rt"),L=p0.getTotalLength(),rid=++S.run,t0=performance.now();$("car").style.display="";marks();
+(function f(n){if(rid!==S.run)return;const t=Math.min(1,(n-t0)/dur),p=p0.getPointAtLength(t*L),q=p0.getPointAtLength(Math.min(L,t*L+4));$("car").setAttribute("transform",`translate(${p.x} ${p.y})`);$("cr").setAttribute("transform",`rotate(${Math.atan2(q.y-p.y,q.x-p.x)*57.3+90})`);tick&&tick(t);if(t<1)requestAnimationFrame(f);else done&&done()})(t0)}
+const dc=()=>`<div class="drv"><div class="av">${D.n[0]}</div><div style="flex:1"><b>${D.n}</b> ★ ${D.r}<br><small>${D.v}</small></div><span class="plate">${D.p}</span></div><div class="row" style="margin-top:0"><button class="ghost" data-a="call">📞 Call</button><button class="ghost" data-a="chat">💬 Message</button></div>`;
+function vPick(){const a=PL[S.from],b=PL[S.to],ok=S.from!==S.to,cur=quote(tp());
+return `<h2>Where to?</h2><div class="rt2"><button class="r" data-pk="from"><span class="dot"></span><div><small>Pickup</small><b>${a.n}</b></div></button><button class="r" data-pk="to"><span class="dot d"></span><div><small>Drop</small><b>${b.n}</b></div></button><button class="swap" data-a="swap" aria-label="Swap pickup and drop">⇅</button></div>${typeof QA==="function"?QA():""}
+${S.sg>1?`<p class="warn">Fares are slightly higher than usual due to high demand.</p>`:""}
+${T.map(x=>{const q=quote(x);return `<button class="opt" data-ty="${x.k}" aria-pressed="${x.k===S.type}"><span>${x.e}</span><div><b>${x.n}</b><small>${ok?`${x.w} min away · ${hm(x.w+q.d*3.5)} drop · ${x.c}`:"Choose different places"}</small></div><div class="pr"><b>${ok?R(q.pay):"–"}</b>${ok&&q.c?`<s>${R(q.full)}</s>`:""}</div></button>`}).join("")}
+<div class="row"><input id="pc" placeholder="Apply coupon (try GORIDE20)" value="${S.promo}" aria-label="Coupon code"><button class="sm" data-a="promo">Apply</button></div>
+<div class="seg">${PAY.map(p=>`<button data-pay="${p[0]}" aria-pressed="${S.pay===p[0]}">${p[1]}</button>`).join("")}</div>
+<button class="cta" data-a="book"${ok?"":" disabled"}>${ok?`${S.sched?"Schedule":"Book"} ${tp().n} · ${R(cur.pay)}`:"Pick different places"}</button>`}
+const vFind=()=>`<h2>Looking for nearby drivers</h2><p class="sub">Finding a ${tp().n} near ${PL[S.from].n}</p><div class="ind"><i></i></div><button class="ghost" data-a="cancel">Cancel</button>`;
+const vArr=()=>`<h2 id="eta">Driver is on the way</h2><div class="bar"><i id="pg"></i></div>${dc()}<div class="pin"><small>Start your trip with this PIN</small><div class="otpb">${[...D.o].map(c=>`<b>${c}</b>`).join("")}</div></div><button class="ghost cx" data-a="cancel">Cancel ride</button>`;
+const vOtp=()=>`<h2>Your driver has arrived</h2>${dc()}<label for="otp"><small>Enter the 4-digit PIN from your driver card</small></label><input id="otp" inputmode="numeric" maxlength="4" autocomplete="off" style="margin-top:6px;text-align:center;font-size:22px;letter-spacing:.3em"><div class="err" id="oe"></div><button class="cta" style="margin-top:0" data-a="start">Start trip</button><button class="ghost cx" data-a="cancel">Cancel ride</button>`;
+const vTrip=()=>`<h2>Heading to ${PL[S.to].n}</h2><div class="bar"><i id="pg"></i></div><p class="sub"><span id="rm">–</span> km left · Arrive by ${hm(QQ.d*3.5)}</p>${dc()}<div class="rowl"><span>Fare</span><b id="fm">${R(0)}</b></div><div class="row"><button class="ghost" data-a="share">Share trip</button><button class="ghost cx" data-a="sos">Safety</button></div>`;
+function vDone(){const q=QQ,r=(H[0]||{}).rating||0;
+return `<div class="tick">✓</div><h2 style="text-align:center">Ride completed</h2><div class="rc"><span>Base fare</span><span>${R(q.t.b)}</span><span>Distance (${q.d.toFixed(1)} km)</span><span>${R(Math.round(q.t.r*q.d))}</span><span>Taxes and fees</span><span>${R(q.full-q.t.b-Math.round(q.t.r*q.d))}</span>${q.c?`<span class="ok">Coupon ${S.promo}</span><span class="ok">−${R(q.c)}</span>`:""}${S.tip?`<span>Tip</span><span>${R(S.tip)}</span>`:""}<span class="t">Total</span><span class="t">${R(q.pay+S.tip)}</span></div>
+<small>Paid with ${PAY.find(p=>p[0]===S.pay)[1]}</small><div class="seg">${[0,10,20,50].map(v=>`<button data-tip="${v}" aria-pressed="${S.tip===v}">${v?"Tip "+R(v):"No tip"}</button>`).join("")}</div>
+<p style="text-align:center;margin:12px 0 0">How was your ride with ${D.n}?</p><div class="stars">${[1,2,3,4,5].map(n=>`<button data-n="${n}" class="${n<=r?"on":""}" aria-label="${n} star">★</button>`).join("")}</div><div class="row"><button class="ghost" data-a="rcpt">🧾 Receipt</button><button class="ghost" data-a="rep">⚠️ Report issue</button></div><button class="cta" style="margin-top:4px" data-a="again">Done</button>`}
+const vHist=()=>`<h2>Your rides</h2>${typeof UPC==="function"?UPC():""}`+(H.length?H.map((h,i)=>`<div class="h" style="flex-wrap:wrap"><div><b>${h.e} ${h.a} → ${h.b}</b><br><small>${h.d} · ${h.k} km · ${h.p} · ${h.rating?"★ "+h.rating:"not rated"}</small></div><b>${R(h.f)}</b><div class="row" style="width:100%;margin-top:0"><button class="ghost" style="padding:8px" data-re="${i}">↻ Book again</button><button class="ghost" style="padding:8px" data-rc="${i}">🧾 Receipt</button></div></div>`).join(""):`<p>No rides yet.</p><button class="cta" data-t="book">Book your first ride</button>`);
+function vPlaces(q){const s=(q||"").toLowerCase();return PL.filter(p=>p.n.toLowerCase().includes(s)).map(p=>`<button class="pl" data-pl="${p.i}"><span class="dot${S.pk==="to"?" d":""}"></span><b>${p.n}</b></button>`).join("")||"<p>No places found.</p>"}
+const vPk=()=>`<h2>${S.pk==="from"?"Pickup":"Drop"} location</h2><input id="ps" placeholder="Search places" aria-label="Search places" autocomplete="off"><div id="pls">${vPlaces("")}</div><button class="ghost" data-a="back">Back</button>`;
+function render(){$("wal").textContent="Wallet "+R(W);$("amb").style.display=S.st==="pick"||S.st==="find"?"":"none";document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.t===S.tab));
+$("panel").innerHTML=`<div class="grab"></div><div class="v">${S.tab==="hist"?vHist():S.tab==="acct"&&typeof vAcct==="function"?vAcct():S.pk?vPk():({pick:vPick,find:vFind,arr:vArr,otp:vOtp,trip:vTrip,done:vDone})[S.st]()}</div>`;if(S.pk){const i=$("ps");i&&i.focus()}}
+function assign(){const t=tp(),a=PL[S.from];let s;do{s=PL[Math.random()*PL.length|0]}while(s.i===a.i);
+D={n:NM[Math.random()*NM.length|0],r:(4.5+Math.random()*.4).toFixed(1),v:t.v,p:`AP 39 ${"ABCDEFGH"[Math.random()*8|0]}${"JKLMNPQR"[Math.random()*8|0]} ${1000+(Math.random()*9000|0)}`,o:String(1000+(Math.random()*9000|0))};
+S.st="arr";$("ce").textContent=t.e;render();const r=pathTo(s.nd,a.nd),dist=Math.max(r.len*KM,.6);
+go(r.d,4500+dist*500,p=>{const e=$("eta");if(e){e.textContent=`Arriving in ${Math.max(1,Math.ceil((1-p)*Math.max(2,dist*2.4)))} min`;$("pg").style.width=p*100+"%"}},()=>{S.st="otp";render()})}
+function start(){if($("otp").value!==D.o){$("oe").textContent="That OTP doesn’t match the one on your driver card.";return}
+const a=PL[S.from],b=PL[S.to];S.st="trip";render();
+go(rt().d,10000,p=>{const g=$("pg");if(g){g.style.width=p*100+"%";$("fm").textContent=R(Math.round(QQ.pay*p));$("rm").textContent=(QQ.d*(1-p)).toFixed(1)}},()=>{
+H.unshift({a:a.n,b:b.n,e:QQ.t.e,k:QQ.d.toFixed(1),f:QQ.pay,p:PAY.find(x=>x[0]===S.pay)[1],d:new Date().toLocaleDateString("en-IN",{day:"numeric",month:"short"}),rating:0});
+if(S.pay==="wallet")W-=QQ.pay;keep();S.st="done";S.tip=0;render()})}
+function reset(m){S.run++;S.st="pick";S.pk=null;preview();render();if(m)toast(m)}
+function book(){QQ=quote(tp());if(S.pay==="wallet"&&W<QQ.pay){toast("Wallet balance is too low. Pick another way to pay.");render();return}S.st="find";marks();render();const x=++S.run;setTimeout(()=>{if(S.run===x&&S.st==="find")assign()},2400)}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-a],[data-ty],[data-pay],[data-t],[data-p],[data-n],[data-pk],[data-pl],[data-tip]");if(!t)return;const d=t.dataset;
+if(d.t){S.tab=d.t;S.pk=null;render()}
+else if(d.p!==undefined){if(S.st==="pick"&&S.tab==="book"){S.to=+d.p;if(S.to===S.from)S.from=(S.to+1)%PL.length;S.pk=null;preview();render()}}
+else if(d.pk){S.pk=d.pk;render()}
+else if(d.pl!==undefined){S[S.pk]=+d.pl;if(S.from===S.to)S[S.pk==="from"?"to":"from"]=(+d.pl+1)%PL.length;S.pk=null;preview();render()}
+else if(d.ty){S.type=d.ty;render()}
+else if(d.pay){S.pay=d.pay;render()}
+else if(d.tip!==undefined){const n=+d.tip;if(S.pay==="wallet")W-=n-S.tip;S.tip=n;H[0].f=QQ.pay+n;keep();render()}
+else if(d.n){H[0].rating=+d.n;keep();render()}
+else switch(d.a){
+case"book":book();break;
+case"swap":[S.from,S.to]=[S.to,S.from];preview();render();break;
+case"back":S.pk=null;render();break;
+case"promo":{const c=$("pc").value.trim().toUpperCase();if(c===""){S.promo="";render();break}if(c==="GORIDE20"||c==="WELCOME50"){S.promo=c;toast(c==="GORIDE20"?"GORIDE20 applied: 20% off, up to ₹60":"WELCOME50 applied: ₹50 off rides above ₹100")}else toast("That promo code isn’t valid.");render();break}
+case"cancel":reset("Ride cancelled");break;
+case"start":start();break;
+case"again":S.tip=0;reset();break;
+case"call":toast("Calling "+D.n+"… (demo)");break;
+case"chat":toast("Messaging is a demo feature here.");break;
+case"share":toast("Trip link copied (demo)");break;
+case"sos":toast("Emergency contacts alerted with your live location (demo)");break;
+case"t3":{const m=$("mw").classList.toggle("t3");t.setAttribute("aria-pressed",m);break}}});
+document.addEventListener("input",e=>{if(e.target.id==="ps")$("pls").innerHTML=vPlaces(e.target.value)});
+drawMap();preview();render();
+
+</script>
+<script>
+// Backend URL. Leave empty when the Node server serves this folder.
+// On GitHub Pages set it to your deployed backend, e.g. "https://goride-api.onrender.com"
+window.GORIDE_API = "";
+
+</script>
+<script>
+// Translations: L = account screens, U = ride-flow labels (English, Telugu, Hindi)
+const L={
+en:{login:'Log in',signup:'Sign up',name:'Full name',email:'Email',pw:'Password',phone:'Phone (10 digits)',acct:'Account',out:'Log out',save:'Save changes',lang:'Language',notify:'Ride notifications',sound:'Sounds',old:'Current password',nw:'New password (8+ chars)',chpw:'Change password',del:'Delete account',delq:'Delete your account and all ride data? This cannot be undone.',saved:'Saved',sw1:'New here? Create an account',sw2:'Have an account? Log in',tag:'Rides across the city',pwd:'Password updated',on:'On',off:'Off',profile:'Profile',places:'Saved places',wallet:'Wallet & payments',contacts:'Emergency contacts',offers:'Offers & referral',prefs:'Preferences',help:'Help & support',sec:'Security & privacy',home:'Home',work:'Work',setp:'Set Home / Work',none:'Not set',bal:'Wallet balance',defpay:'Default payment',defride:'Default ride type',addc:'Add contact',cname:'Contact name',max3:'You can add up to 3 contacts.',cpn:'Coupons',apply:'Use',ref:'Your referral code',copy:'Copy code',copied:'Copied',refd:'Invite friends: both get ₹50 off when they take their first ride.',faq:'Common questions',contact:'Contact support',dl:'Download my data',stats:'Total rides',spent:'Total spent',cancelled:'Cancel for free before a driver arrives.'},
+te:{login:'లాగిన్',signup:'సైన్ అప్',name:'పూర్తి పేరు',email:'ఈమెయిల్',pw:'పాస్‌వర్డ్',phone:'ఫోన్ (10 అంకెలు)',acct:'ఖాతా',out:'లాగ్ అవుట్',save:'మార్పులు సేవ్ చేయండి',lang:'భాష',notify:'రైడ్ నోటిఫికేషన్లు',sound:'శబ్దాలు',old:'ప్రస్తుత పాస్‌వర్డ్',nw:'కొత్త పాస్‌వర్డ్ (8+ అక్షరాలు)',chpw:'పాస్‌వర్డ్ మార్చండి',del:'ఖాతా తొలగించండి',delq:'మీ ఖాతా మరియు రైడ్ డేటాను తొలగించాలా? ఇది తిరిగి రాదు.',saved:'సేవ్ అయింది',sw1:'కొత్తవారా? ఖాతా సృష్టించండి',sw2:'ఖాతా ఉందా? లాగిన్ అవ్వండి',tag:'నగరమంతా రైడ్‌లు',pwd:'పాస్‌వర్డ్ మారింది',on:'ఆన్',off:'ఆఫ్',profile:'ప్రొఫైల్',places:'సేవ్ చేసిన స్థలాలు',wallet:'వాలెట్ & చెల్లింపులు',contacts:'అత్యవసర కాంటాక్ట్‌లు',offers:'ఆఫర్లు & రిఫరల్',prefs:'ప్రాధాన్యతలు',help:'సహాయం',sec:'భద్రత & గోప్యత',home:'ఇల్లు',work:'ఆఫీస్',bal:'వాలెట్ బ్యాలెన్స్',copy:'కోడ్ కాపీ'},
+hi:{login:'लॉग इन',signup:'साइन अप',name:'पूरा नाम',email:'ईमेल',pw:'पासवर्ड',phone:'फ़ोन (10 अंक)',acct:'खाता',out:'लॉग आउट',save:'बदलाव सहेजें',lang:'भाषा',notify:'राइड सूचनाएँ',sound:'आवाज़ें',old:'मौजूदा पासवर्ड',nw:'नया पासवर्ड (8+ अक्षर)',chpw:'पासवर्ड बदलें',del:'खाता हटाएँ',delq:'अपना खाता और राइड डेटा हटाएँ? यह वापस नहीं होगा।',saved:'सहेजा गया',sw1:'नए हैं? खाता बनाएँ',sw2:'खाता है? लॉग इन करें',tag:'पूरे शहर में राइड',pwd:'पासवर्ड बदल गया',on:'चालू',off:'बंद',profile:'प्रोफ़ाइल',places:'सहेजे गए स्थान',wallet:'वॉलेट और भुगतान',contacts:'आपातकालीन संपर्क',offers:'ऑफ़र और रेफ़रल',prefs:'पसंद',help:'मदद',sec:'सुरक्षा और गोपनीयता',home:'घर',work:'ऑफ़िस',bal:'वॉलेट बैलेंस',copy:'कोड कॉपी करें'}};
+const U={"Ride":["రైడ్","राइड"],"Activity":["కార్యకలాపం","गतिविधि"],"Where to?":["ఎక్కడికి?","कहाँ जाना है?"],"Pickup":["పికప్","पिकअप"],"Drop":["డ్రాప్","ड्रॉप"],"Pickup location":["పికప్ స్థలం","पिकअप स्थान"],"Drop location":["డ్రాప్ స్థలం","ड्रॉप स्थान"],"Apply":["వర్తించు","लागू करें"],"Cancel":["రద్దు","रद्द करें"],"Cancel ride":["రైడ్ రద్దు","राइड रद्द करें"],"Back":["వెనుకకు","वापस"],"Looking for nearby drivers":["దగ్గరలోని డ్రైవర్ల కోసం చూస్తున్నాం","नज़दीकी ड्राइवर खोज रहे हैं"],"Driver is on the way":["డ్రైవర్ వస్తున్నారు","ड्राइवर आ रहे हैं"],"Your driver has arrived":["మీ డ్రైవర్ వచ్చారు","आपके ड्राइवर पहुँच गए"],"Start trip":["ట్రిప్ ప్రారంభించు","यात्रा शुरू करें"],"Ride completed":["రైడ్ పూర్తయింది","राइड पूरी हुई"],"Total":["మొత్తం","कुल"],"Done":["పూర్తి","हो गया"],"Your rides":["మీ రైడ్‌లు","आपकी राइड"],"No rides yet.":["ఇంకా రైడ్‌లు లేవు.","अभी कोई राइड नहीं।"],"Call":["కాల్","कॉल"],"Fare":["ఛార్జీ","किराया"],"Share trip":["ట్రిప్ షేర్","यात्रा साझा करें"],"Safety":["భద్రత","सुरक्षा"],"Base fare":["బేస్ ఫేర్","बेस किराया"],"Taxes and fees":["పన్నులు, రుసుములు","कर और शुल्क"],"No tip":["టిప్ వద్దు","टिप नहीं"],"Search places":["స్థలాలు వెతకండి","स्थान खोजें"]};
+
+</script>
+<script>
+// GoRide accounts: login/signup, profile, saved places, wallet, contacts, offers, help, schedule, safety
+// GoRide accounts v2: login/signup, profile, saved places, wallet, contacts, offers, help, languages.
+// Works with the Node backend; if no backend is reachable (e.g. GitHub Pages) it falls back to browser-only accounts.
+(()=>{
+const API=window.GORIDE_API||(location.protocol==='file:'?'http://localhost:3000':'');
+const $=id=>document.getElementById(id),LG=['en','te','hi'],LN=['English','తెలుగు','हिन्दी'];
+let tok=localStorage.getItem('gr-t'),me=null,lang=localStorage.getItem('gr-l')||'en',mode='login',pg='',off=false;
+const t=k=>(L[lang]||L.en)[k]||L.en[k]||k,li=()=>LG.indexOf(lang)-1;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const EM=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// ---------- browser-only fallback backend ----------
+const hs=async s=>{try{return[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode('goride:'+s)))].map(x=>x.toString(16).padStart(2,'0')).join('')}catch{return btoa(unescape(encodeURIComponent(s)))}};
+const pub=u=>{const{pw,...r}=u;return r};
+async function loc(m,p,b){b=b||{};const Us=JSON.parse(localStorage.getItem('gr-users')||'{}'),sv=()=>localStorage.setItem('gr-users',JSON.stringify(Us)),e=String(b.email||'').trim().toLowerCase();
+ if(p==='/signup'){if(!EM.test(e)||String(b.password||'').length<8||!String(b.name||'').trim())throw new Error('Enter a name, valid email and a password of 8+ characters.');if(Us[e])throw new Error('Email already registered.');
+  Us[e]={name:b.name.trim().slice(0,60),email:e,phone:'',lang:'en',settings:{notify:true,sound:true},extra:{},wallet:1000,rides:[],pw:await hs(b.password)};sv();return{token:'local:'+e,user:pub(Us[e])}}
+ if(p==='/login'){const u=Us[e];if(!u||u.pw!==await hs(b.password||''))throw new Error('Wrong email or password.');return{token:'local:'+e,user:pub(u)}}
+ const u=Us[(tok||'').slice(6)];if(!u){const x=new Error('Please log in again.');x.auth=1;throw x}
+ if(p==='/me'&&m==='GET')return{user:pub(u)};
+ if(p==='/me'&&m==='PUT'){if(typeof b.name==='string'&&b.name.trim())u.name=b.name.trim().slice(0,60);if(typeof b.phone==='string'){if(b.phone&&!/^\d{10}$/.test(b.phone))throw new Error('Phone must be 10 digits.');u.phone=b.phone}
+  if(LG.includes(b.lang))u.lang=b.lang;if(b.settings)u.settings={notify:!!b.settings.notify,sound:!!b.settings.sound};if(b.extra)u.extra=b.extra;sv();return{user:pub(u)}}
+ if(p==='/password'){if(u.pw!==await hs(b.old||''))throw new Error('Current password is wrong.');if(String(b.new||'').length<8)throw new Error('New password needs 8+ characters.');u.pw=await hs(b.new);sv();return{ok:true}}
+ if(p==='/state'){if(Number.isFinite(+b.wallet))u.wallet=Math.max(0,Math.round(b.wallet));if(Array.isArray(b.rides))u.rides=b.rides.slice(0,30);sv();return{ok:true}}
+ if(p==='/me'&&m==='DELETE'){delete Us[u.email];sv();return{ok:true}}throw new Error('Not found')}
+async function api(m,p,b){
+ if(off||(tok||'').startsWith('local:'))return loc(m,p,b);
+ try{const r=await fetch(API+'/api'+p,{method:m,headers:{'Content-Type':'application/json',...(tok?{Authorization:'Bearer '+tok}:{})},body:b?JSON.stringify(b):undefined});
+  if(r.status===404||r.status===405||r.status>=500)throw new TypeError('no server');
+  const j=await r.json().catch(()=>({}));if(!r.ok){const e=new Error(j.error||'Error');e.auth=r.status===401&&p!=='/login'&&p!=='/password';throw e}return j}
+ catch(e){if(e instanceof TypeError&&(p==='/login'||p==='/signup')){off=true;return loc(m,p,b)}throw e}}
+// ---------- styles ----------
+const st=document.createElement('style');st.textContent='#auth{position:fixed;inset:0;z-index:50;background:#f1efe9;display:grid;place-items:center;padding:16px;overflow:auto}#auth .card{width:100%;max-width:380px;background:#fff;border-radius:18px;padding:22px;box-shadow:0 4px 24px rgba(0,0,0,.18)}#auth input,.acv input,.acv select{margin-top:8px}select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}.acv .lbl{display:block;margin-top:12px}.link{background:none;border:0;width:100%;margin-top:12px;color:#1a73e8;font-weight:600}.acv details{padding:10px 0;border-bottom:1px solid var(--line)}.acv summary{font-weight:600;cursor:pointer}.cp{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;margin-top:8px;border-radius:12px;background:var(--bg)}.cp b{letter-spacing:.05em}.stt{display:flex;gap:8px;margin-top:10px}.stt div{flex:1;background:var(--bg);border-radius:12px;padding:10px;text-align:center}.stt b{display:block;font-size:18px}';document.head.appendChild(st);
+// ---------- views ----------
+const X=()=>me.extra||(me.extra={}),RT=[['bike','Bike'],['auto','Auto'],['mini','Mini'],['sedan','Sedan'],['pool','Pool']],PY=[['upi','UPI'],['card','Card'],['cash','Cash'],['wallet','Wallet']];
+const langBar=()=>`<div class="seg">${LG.map((x,i)=>`<button data-lg="${x}" aria-pressed="${lang===x}">${LN[i]}</button>`).join('')}</div>`;
+function overlay(){let a=$('auth');if(me){a&&a.remove();return}if(!a){a=document.createElement('div');a.id='auth';document.body.appendChild(a)}
+ a.innerHTML=`<div class="card"><div class="logo" style="font-size:28px">Go<b>Ride</b></div><p class="sub">${t('tag')}</p>${langBar()}<h2 style="margin-top:16px">${t(mode)}</h2>${mode==='signup'?`<input id="an" placeholder="${t('name')}" autocomplete="name">`:''}<input id="ae" type="email" placeholder="${t('email')}" autocomplete="email"><input id="ap" type="password" placeholder="${t('pw')}" autocomplete="${mode==='login'?'current-password':'new-password'}"><div class="err" id="aerr"></div><button class="cta" style="margin-top:4px" data-ac="go">${t(mode)}</button><button class="link" data-ac="sw">${t(mode==='login'?'sw1':'sw2')}</button></div>`}
+const rows=[['profile','👤'],['places','📍'],['wallet','💳'],['contacts','🆘'],['offers','🎁'],['prefs','⚙️'],['help','❓'],['sec','🔒']];
+function page(){const x=X(),s=me.settings||{},bk=`<button class="link" data-pg="" style="text-align:left;margin:0 0 6px">← ${t('acct')}</button>`,tot=H.reduce((a,h)=>a+(+h.f||0),0);
+ const inp=(id,v,ph,ex='')=>`<input id="${id}" value="${esc(v)}" placeholder="${ph}" ${ex}>`,sel=(id,v)=>`<select id="${id}"><option value="">${t('none')}</option>${PL.map(p=>`<option value="${p.i}"${v===p.i?' selected':''}>${p.n}</option>`).join('')}</select>`;
+ if(pg==='profile')return bk+`<h2>${t('profile')}</h2><label class="lbl"><small>${t('name')}</small></label>${inp('fn',me.name,'')}<label class="lbl"><small>${t('email')}</small></label><input value="${esc(me.email)}" disabled><label class="lbl"><small>${t('phone')}</small></label>${inp('fp',me.phone||'','','inputmode="numeric" maxlength="10"')}<div class="stt"><div><b>${H.length}</b><small>${t('stats')}</small></div><div><b>${R(tot)}</b><small>${t('spent')}</small></div></div><div class="err" id="ae1"></div><button class="cta" style="margin-top:4px" data-ac="save">${t('save')}</button>`;
+ if(pg==='places')return bk+`<h2>${t('places')}</h2><label class="lbl"><small>🏠 ${t('home')}</small></label>${sel('sh',x.home)}<label class="lbl"><small>💼 ${t('work')}</small></label>${sel('sw',x.work)}<button class="cta" data-ac="sp">${t('save')}</button>`;
+ if(pg==='wallet')return bk+`<h2>${t('wallet')}</h2><div class="pin"><small>${t('bal')}</small><h2 style="margin:4px 0 0">${R(W)}</h2></div><div class="seg">${[100,500,1000].map(v=>`<button data-top="${v}">+ ${R(v)}</button>`).join('')}</div><label class="lbl"><small>${t('defpay')}</small></label><div class="seg">${PY.map(p=>`<button data-dp="${p[0]}" aria-pressed="${(x.pay||'upi')===p[0]}">${p[1]}</button>`).join('')}</div>`;
+ if(pg==='contacts'){const c=x.contacts||[];return bk+`<h2>${t('contacts')}</h2>${c.map((k,i)=>`<div class="cp"><span><b style="letter-spacing:0">${esc(k.n)}</b><br><small>${esc(k.p)}</small></span><button class="sm" data-rm="${i}" style="padding:8px 12px">✕</button></div>`).join('')||`<p class="sub">${t('max3')}</p>`}${c.length<3?`<input id="cn" placeholder="${t('cname')}"><input id="cp" placeholder="${t('phone')}" inputmode="numeric" maxlength="10"><div class="err" id="ae1"></div><button class="cta" style="margin-top:4px" data-ac="ac">${t('addc')}</button>`:''}`}
+ if(pg==='offers')return bk+`<h2>${t('offers')}</h2><small>${t('cpn')}</small>${[['GORIDE20','20% off, up to ₹60'],['WELCOME50','₹50 off rides above ₹100']].map(c=>`<div class="cp"><span><b>${c[0]}</b><br><small>${c[1]}</small></span><button class="sm" data-cp="${c[0]}" style="padding:8px 14px">${t('apply')}</button></div>`).join('')}<label class="lbl"><small>${t('ref')}</small></label><div class="cp"><b>${x.ref}</b><button class="sm" data-ac="cr" style="padding:8px 14px">${t('copy')}</button></div><p class="sub" style="margin-top:8px">${t('refd')}</p>`;
+ if(pg==='prefs')return bk+`<h2>${t('prefs')}</h2><label class="lbl"><small>${t('lang')}</small></label>${langBar()}<label class="lbl"><small>${t('defride')}</small></label><div class="seg">${RT.map(r=>`<button data-dr="${r[0]}" aria-pressed="${(x.ride||'mini')===r[0]}">${r[1]}</button>`).join('')}</div><div class="seg"><button data-tg="notify" aria-pressed="${!!s.notify}">${t('notify')}: ${t(s.notify?'on':'off')}</button><button data-tg="sound" aria-pressed="${!!s.sound}">${t('sound')}: ${t(s.sound?'on':'off')}</button></div>`;
+ if(pg==='help')return bk+`<h2>${t('help')}</h2><p class="sub">${t('faq')}</p>${[['How is my fare calculated?','Base fare + distance × per-km rate + 5% fees, with higher prices at busy times. Coupons are applied after.'],['How do I cancel a ride?','Tap Cancel ride any time before the trip starts. '+t('cancelled')],['My driver did not arrive','Cancel and book again, or contact support below with your ride details.'],['How do I start my trip?','Enter the 4-digit PIN shown on your driver card when the driver arrives.'],['Lost an item in the ride?','Open Activity, find the ride, then contact support with the driver name and plate.']].map(f=>`<details><summary>${f[0]}</summary><p class="sub">${f[1]}</p></details>`).join('')}<a class="ghost" style="display:block;text-align:center;text-decoration:none;color:inherit" href="mailto:support@goride.example">✉️ ${t('contact')}</a>`;
+ if(pg==='sec')return bk+`<h2>${t('sec')}</h2><label class="lbl"><small>${t('chpw')}</small></label><input id="po" type="password" placeholder="${t('old')}" autocomplete="current-password"><input id="pn" type="password" placeholder="${t('nw')}" autocomplete="new-password"><div class="err" id="ae2"></div><button class="ghost" data-ac="pw">${t('chpw')}</button><button class="ghost" data-ac="dl">${t('dl')}</button><button class="ghost cx" data-ac="del">${t('del')}</button>`;
+ return `<div class="drv" style="border-top:0"><div class="av">${esc(me.name[0]||'?').toUpperCase()}</div><div style="flex:1"><b>${esc(me.name)}</b><br><small>${esc(me.email)}</small></div></div>${rows.map(r=>`<button class="pl" data-pg="${r[0]}"><span style="font-size:22px">${r[1]}</span><b>${t(r[0])}</b></button>`).join('')}<button class="ghost" data-ac="out">${t('out')}</button>`}
+// ---------- wiring into the app ----------
+function setUser(u){me=u;lang=u.lang||lang;localStorage.setItem('gr-l',lang);if(!me.extra)me.extra={};if(!me.extra.ref)me.extra.ref='GO'+Math.random().toString(36).slice(2,7).toUpperCase();W=u.wallet;H=u.rides||[];S.type=me.extra.ride||S.type;S.pay=me.extra.pay||S.pay;pg='';overlay();nav();render()}
+function logout(){tok=null;me=null;off=false;localStorage.removeItem('gr-t');S.tab='book';S.st='pick';S.run++;H=[];W=1000;overlay();render()}
+function nav(){}
+function tr(){const i=li(),b=$('acb');if(b)b.textContent=t('acct');const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT),hit=[];let n;while(n=w.nextNode())hit.push(n);
+ hit.forEach(n=>{if(n.parentNode.closest('#auth,.acv,script,style'))return;const o=n.__o||n.nodeValue.trim();if(!U[o]&&!n.__o)return;n.__o=o;n.nodeValue=i<0?o:U[o][i]});
+ document.querySelectorAll('input[placeholder="Search places"]').forEach(x=>x.placeholder=i<0?'Search places':U['Search places'][i]);document.documentElement.lang=lang;if($('lg'))$('lg').value=lang}
+const R0=render;render=function(){R0();tr();notif()};
+const K0=keep;keep=function(){K0();if(me)api('PUT','/state',{wallet:W,rides:H.slice(0,30)}).catch(()=>{})};
+async function put(o,id){try{const r=await api('PUT','/me',o);me=r.user;lang=me.lang||lang;localStorage.setItem('gr-l',lang);render();return true}catch(e){if(e.auth)return logout();const z=$(id);if(z)z.textContent=e.message;return false}}
+const ex=()=>put({extra:me.extra},'ae1');
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-lg],[data-tg],[data-ac],[data-pg],[data-sp],[data-top],[data-dp],[data-dr],[data-rm],[data-cp],[data-qa],[data-re],[data-rc],[data-sc],[data-x],[data-a="book"],[data-a="share"],[data-a="sos"],[data-a="rcpt"],[data-a="rep"]');if(!b)return;if(b.dataset.a==='book'&&!S.sched)return;e.stopPropagation();const d=b.dataset,x=me&&X();
+ if(d.qa)qa(d.qa);else if(d.re!==undefined)rebook(+d.re);else if(d.rc!==undefined)receipt(H[+d.rc]);else if(d.sc!==undefined){x.sched.splice(+d.sc,1);ex()}else if(d.x){const m=$('sosm');m&&m.remove();if(d.x==='sosadd'){S.tab='acct';pg='contacts';render()}}else if(d.a==='book')schedule();else if(d.a==='share')share();else if(d.a==='sos')sos();else if(d.a==='rcpt')receipt(H[0]);else if(d.a==='rep')report();else if(d.lg){lang=d.lg;localStorage.setItem('gr-l',lang);me?put({lang},'ae1'):overlay();render()}
+ else if(d.sp!==undefined){if(S.st==='pick'){S.to=+d.sp;if(S.to===S.from)S.from=(S.to+1)%PL.length;preview();render()}}
+ else if(d.pg!==undefined){if(d.go){S.tab='acct';S.pk=null}pg=d.pg;render()}
+ else if(d.tg){const s={...me.settings};s[d.tg]=!s[d.tg];put({settings:s},'ae1')}
+ else if(d.top){W+=+d.top;keep();render();toast(t('saved'))}
+ else if(d.dp){x.pay=d.dp;S.pay=d.dp;ex()}
+ else if(d.dr){x.ride=d.dr;S.type=d.dr;ex()}
+ else if(d.rm!==undefined){x.contacts.splice(+d.rm,1);ex()}
+ else if(d.cp){S.promo=d.cp;toast(d.cp+' ✓');S.tab='book';render()}
+ else if(d.ac==='sw'){mode=mode==='login'?'signup':'login';overlay()}
+ else if(d.ac==='go'){try{const r=await api('POST','/'+mode,{name:$('an')&&$('an').value,email:$('ae').value,password:$('ap').value});tok=r.token;localStorage.setItem('gr-t',tok);setUser(r.user)}catch(z){$('aerr').textContent=z.message}}
+ else if(d.ac==='save'){if(await put({name:$('fn').value,phone:$('fp').value},'ae1'))toast(t('saved'))}
+ else if(d.ac==='sp'){const g=v=>v===''?null:+v;x.home=g($('sh').value);x.work=g($('sw').value);if(await ex())toast(t('saved'))}
+ else if(d.ac==='ac'){const n=$('cn').value.trim(),p=$('cp').value.trim();if(!n||!/^\d{10}$/.test(p)){$('ae1').textContent=t('phone');return}(x.contacts=x.contacts||[]).push({n:n.slice(0,40),p});ex()}
+ else if(d.ac==='cr'){try{await navigator.clipboard.writeText(x.ref)}catch{}toast(t('copied'))}
+ else if(d.ac==='pw'){try{await api('POST','/password',{old:$('po').value,new:$('pn').value});toast(t('pwd'));render()}catch(z){$('ae2').textContent=z.message}}
+ else if(d.ac==='dl'){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({profile:me,rides:H},null,2)],{type:'application/json'}));a.download='goride-my-data.json';a.click()}
+ else if(d.ac==='out')logout();
+ else if(d.ac==='del'&&confirm(t('delq'))){try{await api('DELETE','/me');logout()}catch(z){$('ae2').textContent=z.message}}},true);
+overlay();
+if(tok)api('GET','/me').then(r=>setUser(r.user)).catch(()=>logout());
+Object.assign(L.en,{sched:'Schedule',schd:'Ride scheduled',future:'Pick a time in the future',due:'Your scheduled ride is starting',upc:'Upcoming rides',wal:'Wallet',off:'Offers',safe:'Safety',hlp:'Help',close:'Close'});
+Object.assign(L.te,{sched:'షెడ్యూల్',upc:'రాబోయే రైడ్‌లు',wal:'వాలెట్',off:'ఆఫర్లు',safe:'భద్రత',hlp:'సహాయం',close:'మూసివేయి'});
+Object.assign(L.hi,{sched:'शेड्यूल',upc:'आगामी राइड',wal:'वॉलेट',off:'ऑफ़र',safe:'सुरक्षा',hlp:'मदद',close:'बंद करें'});
+Object.assign(U,{"↻ Book again":["↻ మళ్లీ బుక్ చేయండి","↻ फिर बुक करें"],"🧾 Receipt":["🧾 రసీదు","🧾 रसीद"],"⚠️ Report issue":["⚠️ సమస్య తెలపండి","⚠️ समस्या बताएँ"],"Book your first ride":["మీ మొదటి రైడ్ బుక్ చేయండి","अपनी पहली राइड बुक करें"]});
+const lt=m=>new Date(Date.now()+m*6e4-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,16);
+window.vAcct=()=>me?'<div class="acv">'+page()+'</div>':'';
+window.QA=()=>{const x=me&&me.extra||{},ch=[['home','🏠'],['work','💼']].map(k=>x[k[0]]!=null?`<button data-sp="${x[k[0]]}">${k[1]} ${t(k[0])}</button>`:`<button data-pg="places" data-go="1">＋ ${t(k[0])}</button>`).join('');
+ return `<div class="seg" style="margin:10px 0 0">${ch}<button data-qa="sched" aria-pressed="${S.sched!=null}">🕒 ${t('sched')}</button></div>${S.sched!=null?`<input id="sdt" type="datetime-local" value="${S.sched}" min="${lt(0)}" aria-label="${t('sched')}" style="margin-top:8px">`:''}<div class="seg" style="margin:8px 0 0">${[['wallet','💳','wal'],['offers','🎁','off'],['contacts','🆘','safe'],['help','❓','hlp']].map(k=>`<button data-pg="${k[0]}" data-go="1">${k[1]} ${t(k[2])}</button>`).join('')}</div>`};
+window.UPC=()=>{const s=me&&me.extra&&me.extra.sched||[];return s.length?`<small>${t('upc')}</small>`+s.map((r,i)=>`<div class="h"><div><b>🕒 ${PL[r.a].n} → ${PL[r.b].n}</b><br><small>${new Date(r.at).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})} · ${R(r.f)}</small></div><button class="sm" style="padding:8px 12px" data-sc="${i}">✕</button></div>`).join(''):''};
+function qa(k){if(k==='sched'){S.sched=S.sched==null?lt(30):null;render()}}
+document.addEventListener('input',e=>{if(e.target.id==='sdt')S.sched=e.target.value});
+$('lg').addEventListener('change',e=>{lang=e.target.value;localStorage.setItem('gr-l',lang);me?put({lang},'ae1'):overlay();render()});
+function schedule(){if(S.from===S.to||!me)return;if(!S.sched||S.sched<=lt(0)){toast(t('future'));return}const x=X(),q=quote(tp());(x.sched=x.sched||[]).push({a:S.from,b:S.to,ty:S.type,at:S.sched,f:q.pay});x.sched.sort((p,q)=>p.at<q.at?-1:1);S.sched=null;S.tab='hist';ex().then(()=>toast(t('schd')))}
+setInterval(()=>{if(!me||S.st!=='pick')return;const s=X().sched||[],i=s.findIndex(r=>r.at<=lt(0));if(i<0)return;const r=s.splice(i,1)[0];S.from=r.a;S.to=r.b;S.type=r.ty;S.tab='book';preview();ex();toast(t('due'));book()},20000);
+function rebook(i){const h=H[i],a=PL.find(p=>p.n===h.a),b=PL.find(p=>p.n===h.b);if(!a||!b)return;if(S.st==='done')S.st='pick';S.from=a.i;S.to=b.i;S.tab='book';S.pk=null;if(S.st==='pick')preview();render()}
+function save(txt,name){const l=document.createElement('a');l.href=URL.createObjectURL(new Blob([txt],{type:'text/plain'}));l.download=name;l.click()}
+function receipt(h){if(!h)return;save(['GoRide receipt','','Date: '+h.d,'Trip: '+h.a+' to '+h.b,'Ride: '+h.k+' km','Paid with: '+h.p,'Total: Rs '+h.f,'Rider: '+me.name].join('\n'),'goride-receipt.txt')}
+function report(){location.href='mailto:support@goride.example?subject='+encodeURIComponent('GoRide ride issue')+'&body='+encodeURIComponent('Ride: '+(H[0]?H[0].a+' to '+H[0].b:'')+'\nIssue: ')}
+async function share(){const m=`I'm on a GoRide trip to ${PL[S.to].n}. Driver: ${D.n}, ${D.v}, ${D.p}.`;try{if(navigator.share){await navigator.share({title:'GoRide trip',text:m});return}await navigator.clipboard.writeText(m);toast(t('copied'))}catch{}}
+function sos(){const c=(me.extra&&me.extra.contacts)||[];let m=$('sosm');if(!m){m=document.createElement('div');m.id='sosm';m.style.cssText='position:fixed;inset:0;z-index:45;background:rgba(0,0,0,.5);display:grid;place-items:end center';document.body.appendChild(m)}
+ m.innerHTML=`<div style="background:#fff;width:100%;max-width:420px;border-radius:18px 18px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom,0px))"><h2>🆘 ${t('safe')}</h2><a class="cta" style="display:block;text-align:center;text-decoration:none;margin-top:0" href="tel:112">📞 112</a>${c.map(k=>`<a class="ghost" style="display:block;text-align:center;text-decoration:none;color:inherit" href="tel:${esc(k.p)}">📞 ${esc(k.n)} · ${esc(k.p)}</a>`).join('')}${c.length<3?`<button class="ghost" data-x="sosadd">＋ ${t('addc')}</button>`:''}<button class="ghost" data-x="sosx">${t('close')}</button></div>`}
+let ls='';function notif(){if(!me||ls===S.st)return;const was=ls;ls=S.st;const s=me.settings||{},m={arr:'Driver is on the way',otp:'Your driver has arrived',done:'Ride completed'}[S.st];if(!was||!m)return;if(s.notify)toast(m);if(s.sound)beep()}
+function beep(){try{const c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator();o.connect(c.destination);o.frequency.value=880;o.start();o.stop(c.currentTime+.15)}catch{}}
+})();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "goride",
+  "version": "2.0.0",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "build": "echo no build needed",
+    "start": "node server.js"
+  },
+  "dependencies": {},
+  "engines": { "node": ">=18" }
+}

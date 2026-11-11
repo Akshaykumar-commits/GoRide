@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: goride
+    runtime: node
+    startCommand: node backend/server.js
+    envVars:
+      - key: SECRET
+        generateValue: true
+      - key: ADMIN_KEY
+        generateValue: true

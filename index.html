@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GoRide</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header><span class="logo">Go<b>Ride</b></span><nav><button data-t="book" aria-pressed="true">Ride</button><button data-t="hist" aria-pressed="false">Activity</button><button data-t="acct" id="acb" aria-pressed="false">Account</button></nav><select id="lg" aria-label="Language" style="width:auto;margin-left:auto;padding:5px 8px;font-size:13px"><option value="en">English</option><option value="te">తెలుగు</option><option value="hi">हिन्दी</option></select><button class="pill" id="wal" data-pg="wallet" data-go="1" style="margin-left:0" aria-label="Wallet"></button></header>
+<div class="mapw" id="mw"><svg id="map" viewBox="0 0 900 900" preserveAspectRatio="xMidYMin meet" role="img" aria-label="City map. Tap a place to set your drop."></svg></div>
+<section class="sheet" id="panel" aria-live="polite"></section>
+<div id="toast" role="status"></div>
+<script src="js/app.js"></script>
+<script src="js/config.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/account.js"></script>
+
+</body>
+</html>
